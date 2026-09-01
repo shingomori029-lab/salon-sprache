@@ -1,0 +1,206 @@
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px 96px;
+}
+
+/* ── ヘッダー ─────────────────────────────── */
+.header { padding: 20px 0 12px; }
+
+.brand { display: flex; gap: 12px; align-items: center; }
+.brand .logo {
+  font-size: 26px; width: 46px; height: 46px; flex: none;
+  display: grid; place-items: center;
+  background: var(--accent-soft); border-radius: 12px;
+}
+.brand h1 { font-size: 20px; letter-spacing: .01em; }
+.brand p { font-size: 12px; color: var(--ink-2); }
+
+.controls {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  align-items: center; justify-content: space-between;
+  margin-top: 14px;
+}
+
+.seg {
+  display: inline-flex; background: var(--surface-2);
+  border-radius: 999px; padding: 3px;
+}
+.seg button {
+  padding: 6px 14px; border-radius: 999px;
+  font-size: 13px; color: var(--ink-2);
+}
+.seg button.on { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: var(--shadow); }
+
+.rate { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-2); }
+.rate input { width: 96px; accent-color: var(--accent); }
+
+/* ── タブ ─────────────────────────────────── */
+.tabs {
+  position: sticky; top: 0; z-index: 10;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+  background: var(--bg); padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.tabs button {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 4px; border-radius: 10px;
+  font-size: 11px; color: var(--ink-2);
+}
+.tabs button span { font-size: 17px; }
+.tabs button.on { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.tabs .count {
+  position: absolute; top: 2px; right: 50%; margin-right: -26px;
+  background: var(--accent); color: #fff; line-height: 1.5;
+  font-size: 10px; padding: 0 5px; border-radius: 999px;
+}
+
+/* ── 検索 ─────────────────────────────────── */
+.searchbar { margin: 16px 0 12px; }
+.searchbar input {
+  width: 100%; padding: 11px 14px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); outline: none;
+}
+.searchbar input:focus { border-color: var(--accent); }
+
+/* ── シーン一覧 ───────────────────────────── */
+.cats { display: grid; gap: 8px; }
+.cat {
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 12px 14px;
+}
+.cat:hover { border-color: var(--accent); }
+.cat-icon { font-size: 22px; width: 32px; flex: none; text-align: center; }
+.cat-body { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.cat-body strong { font-size: 15px; }
+.cat-body em { font-size: 12px; color: var(--de); font-style: normal; }
+.cat-body small { font-size: 11px; color: var(--ink-3); }
+.cat-n {
+  font-size: 12px; color: var(--ink-2); background: var(--surface-2);
+  padding: 2px 9px; border-radius: 999px; flex: none;
+}
+
+/* ── 見出し行 ─────────────────────────────── */
+.crumb {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin: 4px 0 12px;
+}
+.crumb h2 { font-size: 16px; flex: 1; min-width: 140px; }
+.back { font-size: 13px; color: var(--accent); }
+.practice { font-size: 12px; color: var(--ink-2); display: flex; align-items: center; gap: 5px; }
+.practice input { accent-color: var(--accent); }
+
+/* ── フレーズカード ───────────────────────── */
+.list { display: grid; gap: 10px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow);
+}
+.card-head { display: flex; gap: 10px; align-items: flex-start; }
+.card .ja { flex: 1; font-size: 15px; font-weight: 600; }
+.fav { font-size: 18px; color: var(--ink-3); line-height: 1; padding: 0 2px; }
+.fav.on { color: #e0a72b; }
+
+.langs { margin-top: 10px; display: grid; gap: 10px; }
+.line { display: flex; gap: 10px; align-items: flex-start; }
+.line .tag {
+  font-size: 10px; font-weight: 700; letter-spacing: .06em;
+  padding: 2px 6px; border-radius: 5px; flex: none; margin-top: 3px;
+}
+.line.de .tag { background: var(--accent-soft); color: var(--de); }
+.line.en .tag { background: var(--surface-2); color: var(--en); }
+.line .text { flex: 1; min-width: 0; }
+.line .target { font-size: 15px; }
+.line.de .target { color: var(--de); font-weight: 600; }
+.line.en .target { color: var(--en); }
+.line .kana { font-size: 11.5px; color: var(--ink-3); }
+
+.play { font-size: 15px; opacity: .55; padding: 2px 4px; flex: none; }
+.play:hover { opacity: 1; }
+.play.playing { opacity: 1; animation: pulse .7s ease-in-out infinite; }
+.play.small { font-size: 13px; }
+@keyframes pulse { 50% { transform: scale(1.22); } }
+
+.reveal {
+  margin-top: 10px; width: 100%; padding: 14px;
+  border: 1px dashed var(--line); border-radius: 10px;
+  color: var(--ink-3); font-size: 13px; background: var(--surface-2);
+}
+.reveal:hover { color: var(--accent); border-color: var(--accent); }
+
+.note {
+  margin-top: 10px; font-size: 12px; color: var(--ink-2);
+  background: var(--surface-2); padding: 8px 10px; border-radius: 8px;
+}
+
+/* ── 単語帳 ───────────────────────────────── */
+.vocab { display: grid; gap: 20px; }
+.group-title {
+  font-size: 12px; color: var(--ink-2); letter-spacing: .08em;
+  padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 4px;
+}
+.vocab-list li {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 2px; border-bottom: 1px solid var(--line);
+}
+.v-ja { flex: none; width: 34%; font-size: 14px; }
+.v-target { flex: 1; min-width: 0; }
+.v-de { display: block; color: var(--de); font-weight: 600; font-size: 14px; }
+.v-de em { font-style: normal; color: var(--ink-3); font-weight: 400; }
+.v-kana { display: block; font-size: 11px; color: var(--ink-3); font-weight: 400; }
+.v-en { display: block; color: var(--en); font-size: 13px; }
+
+/* ── クイズ ───────────────────────────────── */
+.quiz { margin-top: 16px; }
+.quiz-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
+.quiz-bar select {
+  flex: 1; padding: 9px 12px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--surface);
+}
+.progress { font-size: 12px; color: var(--ink-2); flex: none; }
+
+.question { font-size: 20px; font-weight: 700; text-align: center; margin-top: 12px; }
+.question-hint { font-size: 12px; color: var(--ink-3); text-align: center; margin-bottom: 18px; }
+
+.options { display: grid; gap: 8px; }
+.option {
+  text-align: left; padding: 13px 15px; font-size: 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+}
+.option:hover:not(:disabled) { border-color: var(--accent); }
+.option.correct { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--surface)); }
+.option.wrong { border-color: var(--ng); background: color-mix(in srgb, var(--ng) 12%, var(--surface)); }
+.option.dim { opacity: .45; }
+
+.answer { margin-top: 16px; text-align: center; }
+.answer .kana { font-size: 12px; color: var(--ink-3); min-height: 18px; }
+.answer-actions { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+
+.primary {
+  padding: 11px 26px; border-radius: 999px;
+  background: var(--accent); color: #fff; font-weight: 700; font-size: 14px;
+}
+.ghost {
+  padding: 11px 20px; border-radius: 999px; font-size: 14px;
+  border: 1px solid var(--line); background: var(--surface);
+}
+
+.result { text-align: center; padding: 30px 0; }
+.result .score { font-size: 40px; font-weight: 800; color: var(--accent); }
+.result .score span { font-size: 14px; color: var(--ink-2); font-weight: 500; }
+.result .comment { color: var(--ink-2); font-size: 14px; margin: 8px 0 22px; }
+
+/* ── その他 ───────────────────────────────── */
+.empty {
+  text-align: center; color: var(--ink-3); font-size: 13px;
+  padding: 48px 16px; line-height: 2;
+}
+.footer {
+  margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--line);
+  font-size: 11px; color: var(--ink-3); text-align: center;
+}
+
+.progress.center { display: block; text-align: center; margin-top: 4px; }
