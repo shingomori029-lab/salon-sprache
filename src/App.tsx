@@ -4,8 +4,10 @@ import type { CategoryId } from './data/types'
 import { PhraseCard, type ShowLang } from './components/PhraseCard'
 import { VocabList } from './components/VocabList'
 import { Quiz } from './components/Quiz'
+import { InstallHint } from './components/InstallHint'
 import { useSpeech } from './hooks/useSpeech'
 import { useFavorites, useLocalStorage } from './hooks/useLocalStorage'
+import { useProgress } from './hooks/useProgress'
 import './App.css'
 
 type Tab = 'phrases' | 'vocab' | 'quiz' | 'favorites'
@@ -27,6 +29,7 @@ export default function App() {
 
   const { speak, speakingId, hasVoice, rate, setRate } = useSpeech()
   const fav = useFavorites()
+  const progress = useProgress()
 
   const q = query.trim().toLowerCase()
   const visible = useMemo(() => {
@@ -94,6 +97,8 @@ export default function App() {
       </nav>
 
       <main className="main">
+        <InstallHint />
+
         {tab !== 'quiz' && (
           <div className="searchbar">
             <input
@@ -110,7 +115,7 @@ export default function App() {
             {!cat && !searching ? (
               <div className="cats">
                 {categories.map((c) => {
-                  const n = phrases.filter((p) => p.cat === c.id).length
+                  const { mastered, total } = progress.byCategory(c.id)
                   return (
                     <button key={c.id} className="cat" onClick={() => setCat(c.id)}>
                       <span className="cat-icon" aria-hidden="true">{c.icon}</span>
@@ -118,8 +123,13 @@ export default function App() {
                         <strong>{c.ja}</strong>
                         <em>{c.de}</em>
                         <small>{c.desc}</small>
+                        {mastered > 0 && (
+                          <span className="cat-bar" title={`${total}件中 ${mastered}件を習得`}>
+                            <i style={{ width: `${(mastered / total) * 100}%` }} />
+                          </span>
+                        )}
                       </span>
-                      <span className="cat-n">{n}</span>
+                      <span className="cat-n">{mastered > 0 ? `${mastered}/${total}` : total}</span>
                     </button>
                   )
                 })}
@@ -168,12 +178,24 @@ export default function App() {
         )}
 
         {tab === 'quiz' && (
-          <Quiz lang={show === 'en' ? 'en' : 'de'} onSpeak={speak} hasVoice={hasVoice} />
+          <Quiz lang={show === 'en' ? 'en' : 'de'} onSpeak={speak} hasVoice={hasVoice} progress={progress} />
         )}
       </main>
 
       <footer className="footer">
         <p>収録：フレーズ {phrases.length}件 / {categories.length}シーン ・ オフラインでも使えます</p>
+        {progress.answeredCount > 0 && (
+          <button
+            className="reset"
+            onClick={() => {
+              if (confirm('クイズの成績と習得状況をすべて消します。お気に入りは残ります。よろしいですか？')) {
+                progress.reset()
+              }
+            }}
+          >
+            学習記録をリセット
+          </button>
+        )}
       </footer>
     </div>
   )

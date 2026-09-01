@@ -204,3 +204,64 @@
 }
 
 .progress.center { display: block; text-align: center; margin-top: 4px; }
+
+/* ── インストール案内 ─────────────────────── */
+.install {
+  position: relative;
+  background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: var(--radius); padding: 13px 40px 13px 14px; margin-bottom: 14px;
+}
+.install strong { display: block; font-size: 13px; margin-bottom: 4px; }
+.install p { font-size: 12px; color: var(--ink-2); line-height: 1.7; }
+.install b { color: var(--accent); }
+.install-close {
+  position: absolute; top: 6px; right: 8px;
+  font-size: 20px; line-height: 1; color: var(--ink-3); padding: 4px 8px;
+}
+.install-close:hover { color: var(--ink); }
+
+/* ── 習得状況 ─────────────────────────────── */
+.mastery {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 14px; margin-bottom: 14px;
+}
+.mastery-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; }
+.mastery-head strong { font-size: 20px; color: var(--accent); }
+.mastery-head em { font-size: 12px; color: var(--ink-3); font-style: normal; font-weight: 400; }
+.mastery-note { font-size: 11.5px; color: var(--ink-3); margin-top: 7px; }
+
+.bar { height: 7px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width .35s ease; }
+
+.cat-bar {
+  display: block; height: 3px; width: 100%; max-width: 160px;
+  background: var(--surface-2); border-radius: 999px; overflow: hidden; margin-top: 6px;
+}
+.cat-bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+
+.weak-toggle {
+  display: flex; align-items: center; gap: 5px; flex: none;
+  font-size: 13px; color: var(--ink-2); white-space: nowrap;
+}
+.weak-toggle input { accent-color: var(--accent); }
+
+/* ── 間違えたフレーズ ─────────────────────── */
+.missed {
+  text-align: left; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 14px; margin: 0 0 20px;
+}
+.missed h3 { font-size: 13px; color: var(--ink-2); margin-bottom: 10px; }
+.missed li { padding: 8px 0; border-top: 1px solid var(--line); }
+.missed li:first-child { border-top: none; }
+.m-ja { display: block; font-size: 13px; font-weight: 600; }
+.m-target { display: block; font-size: 13px; color: var(--de); }
+.m-kana { display: block; font-size: 11px; color: var(--ink-3); }
+.missed-note { font-size: 11px; color: var(--ink-3); margin-top: 10px; }
+
+.empty { white-space: pre-line; }
+
+.reset {
+  margin-top: 10px; font-size: 11px; color: var(--ink-3);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.reset:hover { color: var(--ng); }

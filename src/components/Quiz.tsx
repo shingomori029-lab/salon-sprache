@@ -2,11 +2,13 @@ import { useMemo, useState } from 'react'
 import { phrases, categories } from '../data/phrases'
 import type { CategoryId, Phrase } from '../data/types'
 import type { Lang } from '../hooks/useSpeech'
+import { MASTER_STREAK, type Progress } from '../hooks/useProgress'
 
 type Props = {
   lang: Lang
   onSpeak: (text: string, lang: Lang, id: string) => void
   hasVoice: (lang: Lang) => boolean
+  progress: Progress
 }
 
 const QUESTIONS = 8
@@ -20,14 +22,18 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-function buildQuiz(pool: Phrase[], lang: Lang) {
-  return shuffle(pool)
+/**
+ * questions から出題し、選択肢のダミーは distractors から取る。
+ * 苦手だけを出題する時も、選択肢は同じシーンの他フレーズから選ばれる。
+ */
+function buildQuiz(questions: Phrase[], distractors: Phrase[], lang: Lang) {
+  return shuffle(questions)
     .slice(0, QUESTIONS)
     .map((correct) => {
-      const distractors = shuffle(pool.filter((p) => p.id !== correct.id)).slice(0, 3)
+      const others = shuffle(distractors.filter((p) => p.id !== correct.id)).slice(0, 3)
       return {
         phrase: correct,
-        options: shuffle([correct, ...distractors]).map((p) => ({
+        options: shuffle([correct, ...others]).map((p) => ({
           id: p.id,
           text: lang === 'de' ? p.de : p.en,
         })),
@@ -35,15 +41,38 @@ function buildQuiz(pool: Phrase[], lang: Lang) {
     })
 }
 
-export function Quiz({ lang, onSpeak, hasVoice }: Props) {
+export function Quiz({ lang, onSpeak, hasVoice, progress }: Props) {
   const [cat, setCat] = useState<CategoryId | 'all'>('all')
-  const pool = useMemo(
+  const [weakOnly, setWeakOnly] = useState(false)
+
+  const inCat = useMemo(
     () => (cat === 'all' ? phrases : phrases.filter((p) => p.cat === cat)),
     [cat],
   )
+  const questions = useMemo(
+    () => (weakOnly ? inCat.filter((p) => progress.isWeak(p.id)) : inCat),
+    [inCat, weakOnly, progress],
+  )
+  // 選択肢のダミーは、範囲が狭いときは全体から補う
+  const distractors = inCat.length >= 4 ? inCat : phrases
+
+  const pct = Math.round((progress.masteredCount / progress.total) * 100)
 
   return (
     <div className="quiz">
+      <div className="mastery">
+        <div className="mastery-head">
+          <span>習得したフレーズ</span>
+          <strong>{progress.masteredCount} <em>/ {progress.total}</em></strong>
+        </div>
+        <div className="bar"><i style={{ width: `${pct}%` }} /></div>
+        <p className="mastery-note">
+          {progress.answeredCount === 0
+            ? `クイズに答えると記録が残ります。${MASTER_STREAK}回連続で正解すると「習得」です。`
+            : `苦手なフレーズ ${progress.weakIds.length}件・出題済み ${progress.answeredCount}件`}
+        </p>
+      </div>
+
       <div className="quiz-bar">
         <select value={cat} onChange={(e) => setCat(e.target.value as CategoryId | 'all')}>
           <option value="all">すべてのシーンから出題</option>
@@ -51,30 +80,50 @@ export function Quiz({ lang, onSpeak, hasVoice }: Props) {
             <option key={c.id} value={c.id}>{c.icon} {c.ja}</option>
           ))}
         </select>
+        <label className="weak-toggle">
+          <input type="checkbox" checked={weakOnly} onChange={(e) => setWeakOnly(e.target.checked)} />
+          苦手だけ
+        </label>
       </div>
 
-      {pool.length < 4 ? (
-        <p className="empty">このシーンは問題数が足りません。</p>
+      {questions.length === 0 ? (
+        <p className="empty">
+          {weakOnly
+            ? 'この範囲に苦手なフレーズはありません。\nよくできています。'
+            : 'このシーンには出題できるフレーズがありません。'}
+        </p>
       ) : (
-        // key を変えることで、出題範囲や言語を変えたら丸ごとやり直しになる
-        <Round key={`${cat}:${lang}`} pool={pool} lang={lang} onSpeak={onSpeak} hasVoice={hasVoice} />
+        // key を変えることで、条件を変えたら丸ごとやり直しになる
+        <Round
+          key={`${cat}:${lang}:${weakOnly}`}
+          questions={questions}
+          distractors={distractors}
+          lang={lang}
+          onSpeak={onSpeak}
+          hasVoice={hasVoice}
+          progress={progress}
+        />
       )}
     </div>
   )
 }
 
-function Round({ pool, lang, onSpeak, hasVoice }: Props & { pool: Phrase[] }) {
-  // key で remount されるので、出題範囲・言語ごとに初期化は一度きり
-  const [quiz, setQuiz] = useState(() => buildQuiz(pool, lang))
+function Round({
+  questions, distractors, lang, onSpeak, hasVoice, progress,
+}: Props & { questions: Phrase[]; distractors: Phrase[] }) {
+  // key で remount されるので、初期化は条件ごとに一度きり
+  const [quiz, setQuiz] = useState(() => buildQuiz(questions, distractors, lang))
   const [index, setIndex] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
   const [score, setScore] = useState(0)
+  const [missed, setMissed] = useState<Phrase[]>([])
 
   const restart = () => {
-    setQuiz(buildQuiz(pool, lang))
+    setQuiz(buildQuiz(questions, distractors, lang))
     setIndex(0)
     setPicked(null)
     setScore(0)
+    setMissed([])
   }
 
   if (index >= quiz.length) {
@@ -86,6 +135,23 @@ function Round({ pool, lang, onSpeak, hasVoice }: Props & { pool: Phrase[] }) {
             : score >= quiz.length * 0.7 ? 'いい調子。間違えた分だけ復習しましょう。'
             : 'まずはフレーズ集で、声に出して読むところから。'}
         </p>
+
+        {missed.length > 0 && (
+          <div className="missed">
+            <h3>間違えたフレーズ</h3>
+            <ul>
+              {missed.map((p) => (
+                <li key={p.id}>
+                  <span className="m-ja">{p.ja}</span>
+                  <span className="m-target">{lang === 'de' ? p.de : p.en}</span>
+                  {lang === 'de' && <span className="m-kana">{p.kana}</span>}
+                </li>
+              ))}
+            </ul>
+            <p className="missed-note">これらは「苦手だけ」で再出題されます。</p>
+          </div>
+        )}
+
         <button className="primary" onClick={restart}>もう一度</button>
       </div>
     )
@@ -110,7 +176,9 @@ function Round({ pool, lang, onSpeak, hasVoice }: Props & { pool: Phrase[] }) {
               disabled={picked !== null}
               onClick={() => {
                 setPicked(o.id)
+                progress.record(q.phrase.id, isCorrect)
                 if (isCorrect) setScore((s) => s + 1)
+                else setMissed((m) => [...m, q.phrase])
               }}
             >
               {o.text}
