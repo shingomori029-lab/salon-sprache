@@ -2,6 +2,8 @@
 
 海外で働く日本人美容師のための、接客シーン別 **ドイツ語・英語フレーズ帳**（PWA）。
 
+**公開URL: https://shingomori029-lab.github.io/salon-sprache/**
+
 - 12シーン・135フレーズ（受付／カウンセリング／髪の診断／カット／カラー／パーマ／シャンプー／仕上げ／ホームケア／会計／雑談／聞き返し）
 - 全ドイツ語フレーズに **カタカナ読み** つき
 - 端末内蔵の音声合成で **発音再生**（速度調整あり）
@@ -25,13 +27,18 @@ npm run build
 
 ビルド結果は `dist/` に出ます。`npm run preview` でビルド版をローカル確認できます。
 
-## スマホで使う
+## スマホにインストールする
 
-1. `npm run build` → `dist/` を任意の静的ホスティング（Netlify / Vercel / Cloudflare Pages / GitHub Pages）に置く
-2. スマホのブラウザで開く
-3. iPhone は Safari の共有ボタン →「ホーム画面に追加」、Android は Chrome のメニュー →「アプリをインストール」
+1. スマホのブラウザで https://shingomori029-lab.github.io/salon-sprache/ を開く
+2. **iPhone**: Safari で開き、下の共有ボタン → 「ホーム画面に追加」
+   **Android**: Chrome で開き、右上のメニュー → 「アプリをインストール」
+3. 以後はホーム画面のアイコンから起動。**機内モードでも動きます**
 
-`vite.config.ts` の `base` は `'./'` にしてあるのでサブディレクトリ配信でもそのまま動きます。
+## デプロイ
+
+`main` に push すると GitHub Actions（[deploy.yml](.github/workflows/deploy.yml)）が自動でビルドして GitHub Pages に反映します。数十秒後にスマホ側も更新されます（アプリを一度閉じて開き直すと確実）。
+
+`vite.config.ts` の `base` は `'./'` なので、別のホスティングにそのまま置き換えても動きます。
 
 ### 音声について
 
