@@ -27,7 +27,8 @@ export default function App() {
   const [practice, setPractice] = useLocalStorage('kw.practice', false)
   const [revealed, setRevealed] = useState<string[]>([])
 
-  const { speak, speakingId, hasVoice, rate, setRate } = useSpeech()
+  const { speak, speakingId, canSpeak, rate, setRate, soundFailed, setSoundFailed, isIOS } = useSpeech()
+  const [showSoundHelp, setShowSoundHelp] = useState(false)
   const fav = useFavorites()
   const progress = useProgress()
 
@@ -79,6 +80,11 @@ export default function App() {
               />
             </label>
           )}
+          {'speechSynthesis' in window && (
+            <button className="sound-help-link" onClick={() => setShowSoundHelp((v) => !v)}>
+              🔇 音が出ない？
+            </button>
+          )}
         </div>
       </header>
 
@@ -98,6 +104,36 @@ export default function App() {
 
       <main className="main">
         <InstallHint />
+
+        {(soundFailed || showSoundHelp) && (
+          <aside className="sound-hint">
+            <button
+              className="install-close"
+              aria-label="閉じる"
+              onClick={() => { setSoundFailed(false); setShowSoundHelp(false) }}
+            >×</button>
+            <strong>🔇 読み上げの音が出ないとき</strong>
+            {isIOS ? (
+              <ol>
+                <li>
+                  iPhone 本体の<b>左側面いちばん上のスイッチ（マナーモード）</b>を確認してください。
+                  <b>オレンジ色が見えていたらマナーモード</b>です。読み上げは鳴りません。スイッチを切り替えてください。
+                </li>
+                <li>本体横のボタンで<b>音量を上げて</b>ください（動画などが鳴る音量です）。</li>
+                <li>
+                  それでも鳴らない場合は、ドイツ語の音声データが未インストールかもしれません。
+                  <b>設定 → アクセシビリティ → 読み上げコンテンツ → 声 → ドイツ語</b>から追加できます。
+                </li>
+              </ol>
+            ) : (
+              <ol>
+                <li>端末がマナーモード・ミュートになっていないか確認してください。</li>
+                <li>音量を上げてください。</li>
+                <li>端末にドイツ語の音声データが入っていない場合は、設定から追加してください。</li>
+              </ol>
+            )}
+          </aside>
+        )}
 
         {tab !== 'quiz' && (
           <div className="searchbar">
@@ -174,11 +210,11 @@ export default function App() {
         )}
 
         {tab === 'vocab' && (
-          <VocabList query={query} show={show} onSpeak={speak} hasVoice={hasVoice} />
+          <VocabList query={query} show={show} onSpeak={speak} canSpeak={canSpeak} />
         )}
 
         {tab === 'quiz' && (
-          <Quiz lang={show === 'en' ? 'en' : 'de'} onSpeak={speak} hasVoice={hasVoice} progress={progress} />
+          <Quiz lang={show === 'en' ? 'en' : 'de'} onSpeak={speak} canSpeak={canSpeak} progress={progress} />
         )}
       </main>
 
@@ -215,7 +251,7 @@ export default function App() {
             onToggleFavorite={() => fav.toggle(p.id)}
             onSpeak={speak}
             speakingId={speakingId}
-            hasVoice={hasVoice}
+            canSpeak={canSpeak}
           />
         ))}
       </div>

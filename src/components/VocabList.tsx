@@ -7,10 +7,10 @@ type Props = {
   query: string
   show: ShowLang
   onSpeak: (text: string, lang: Lang, id: string) => void
-  hasVoice: (lang: Lang) => boolean
+  canSpeak: () => boolean
 }
 
-export function VocabList({ query, show, onSpeak, hasVoice }: Props) {
+export function VocabList({ query, show, onSpeak, canSpeak }: Props) {
   const q = query.trim().toLowerCase()
   const filtered = useMemo(
     () =>
@@ -53,7 +53,7 @@ export function VocabList({ query, show, onSpeak, hasVoice }: Props) {
                   )}
                   {(show === 'en' || show === 'both') && <span className="v-en">{v.en}</span>}
                 </span>
-                {hasVoice('de') && (show === 'de' || show === 'both') && (
+                {canSpeak() && (show === 'de' || show === 'both') && (
                   <button
                     className="play small"
                     aria-label={`${v.de} を再生`}

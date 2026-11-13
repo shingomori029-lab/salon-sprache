@@ -7,7 +7,7 @@ import { MASTER_STREAK, type Progress } from '../hooks/useProgress'
 type Props = {
   lang: Lang
   onSpeak: (text: string, lang: Lang, id: string) => void
-  hasVoice: (lang: Lang) => boolean
+  canSpeak: () => boolean
   progress: Progress
 }
 
@@ -41,7 +41,7 @@ function buildQuiz(questions: Phrase[], distractors: Phrase[], lang: Lang) {
     })
 }
 
-export function Quiz({ lang, onSpeak, hasVoice, progress }: Props) {
+export function Quiz({ lang, onSpeak, canSpeak, progress }: Props) {
   const [cat, setCat] = useState<CategoryId | 'all'>('all')
   const [weakOnly, setWeakOnly] = useState(false)
 
@@ -100,7 +100,7 @@ export function Quiz({ lang, onSpeak, hasVoice, progress }: Props) {
           distractors={distractors}
           lang={lang}
           onSpeak={onSpeak}
-          hasVoice={hasVoice}
+          canSpeak={canSpeak}
           progress={progress}
         />
       )}
@@ -109,7 +109,7 @@ export function Quiz({ lang, onSpeak, hasVoice, progress }: Props) {
 }
 
 function Round({
-  questions, distractors, lang, onSpeak, hasVoice, progress,
+  questions, distractors, lang, onSpeak, canSpeak, progress,
 }: Props & { questions: Phrase[]; distractors: Phrase[] }) {
   // key で remount されるので、初期化は条件ごとに一度きり
   const [quiz, setQuiz] = useState(() => buildQuiz(questions, distractors, lang))
@@ -191,7 +191,7 @@ function Round({
         <div className="answer">
           <p className="kana">{lang === 'de' ? q.phrase.kana : ''}</p>
           <div className="answer-actions">
-            {hasVoice(lang) && (
+            {canSpeak() && (
               <button
                 className="ghost"
                 onClick={() => onSpeak(lang === 'de' ? q.phrase.de : q.phrase.en, lang, 'quiz')}

@@ -13,11 +13,11 @@ type Props = {
   onToggleFavorite: () => void
   onSpeak: (text: string, lang: Lang, id: string) => void
   speakingId: string | null
-  hasVoice: (lang: Lang) => boolean
+  canSpeak: () => boolean
 }
 
 export function PhraseCard({
-  phrase, show, masked, onReveal, favorite, onToggleFavorite, onSpeak, speakingId, hasVoice,
+  phrase, show, masked, onReveal, favorite, onToggleFavorite, onSpeak, speakingId, canSpeak,
 }: Props) {
   const showDe = show === 'de' || show === 'both'
   const showEn = show === 'en' || show === 'both'
@@ -49,7 +49,7 @@ export function PhraseCard({
                 <p className="target">{phrase.de}</p>
                 <p className="kana">{phrase.kana}</p>
               </div>
-              {hasVoice('de') && (
+              {canSpeak() && (
                 <button
                   className={'play' + (speakingId === phrase.id + ':de' ? ' playing' : '')}
                   onClick={() => onSpeak(phrase.de, 'de', phrase.id + ':de')}
@@ -66,7 +66,7 @@ export function PhraseCard({
               <div className="text">
                 <p className="target">{phrase.en}</p>
               </div>
-              {hasVoice('en') && (
+              {canSpeak() && (
                 <button
                   className={'play' + (speakingId === phrase.id + ':en' ? ' playing' : '')}
                   onClick={() => onSpeak(phrase.en, 'en', phrase.id + ':en')}
