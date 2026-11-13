@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>音が出ない原因の診断</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 18px; background: #f7f4f0; color: #1f1b17;
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; line-height: 1.7;
+  }
+  h1 { font-size: 19px; margin: 0 0 4px; }
+  .sub { font-size: 12.5px; color: #6b625a; margin: 0 0 18px; }
+  .step { background: #fff; border: 1px solid #e4ddd4; border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .step h2 { font-size: 15px; margin: 0 0 4px; }
+  .step p { font-size: 12.5px; color: #6b625a; margin: 0 0 12px; }
+  button {
+    width: 100%; font: inherit; font-size: 16px; font-weight: 700; color: #fff;
+    background: #9a5b3a; border: none; border-radius: 999px; padding: 15px; cursor: pointer;
+  }
+  button:active { background: #7d4729; }
+  button.sec { background: #514a43; }
+  .verdict { font-size: 14px; font-weight: 700; padding: 12px 14px; border-radius: 10px; margin-top: 12px; display: none; }
+  .verdict.ok { background: #e6f4ec; color: #1f6b43; display: block; }
+  .verdict.ng { background: #fdecec; color: #9c2b2b; display: block; }
+  .verdict.wait { background: #fdf3e7; color: #8a5a1c; display: block; }
+  pre {
+    background: #221f1b; color: #e8e2d9; font-size: 11px; line-height: 1.6;
+    padding: 12px; border-radius: 10px; white-space: pre-wrap; word-break: break-all;
+    margin: 0; max-height: 320px; overflow: auto;
+  }
+  .foot { margin-top: 14px; }
+</style>
+</head>
+<body>
+<h1>音が出ない原因の診断</h1>
+<p class="sub">上から順にボタンを押して、聞こえたかどうかを答えてください。</p>
+
+<div class="step">
+  <h2>① ふつうの音のテスト</h2>
+  <p>「ポー」という音が0.6秒鳴ります。音量は上げておいてください。</p>
+  <button id="beep">① 音を鳴らす</button>
+  <div class="verdict" id="beepV"></div>
+</div>
+
+<div class="step">
+  <h2>② 読み上げのテスト</h2>
+  <p>ドイツ語で「Herzlich willkommen」と読み上げます。</p>
+  <button id="speak">② 読み上げる</button>
+  <div class="verdict" id="speakV"></div>
+</div>
+
+<div class="step">
+  <h2>③ 結果</h2>
+  <p>この内容をそのまま伝えてください。</p>
+  <pre id="log">測定していません</pre>
+  <div class="foot"><button class="sec" id="copy">結果をコピー</button></div>
+</div>
+
+<script>
+(function () {
+  var L = [];
+  var logEl = document.getElementById('log');
+
+  function add(k, v) { L.push(k + ': ' + v); render(); }
+  function render() { logEl.textContent = L.join('\n'); }
+
+  // ---- 環境情報 ----
+  var nav = navigator;
+  var standalone = window.matchMedia('(display-mode: standalone)').matches || nav.standalone === true;
+  add('UA', nav.userAgent);
+  add('ホーム画面から起動', standalone ? 'はい（スタンドアロン）' : 'いいえ（ブラウザ内）');
+  add('speechSynthesis', ('speechSynthesis' in window) ? 'あり' : 'なし');
+
+  function voiceReport() {
+    if (!('speechSynthesis' in window)) return;
+    var vs = speechSynthesis.getVoices();
+    var de = vs.filter(function (v) { return v.lang.toLowerCase().indexOf('de') === 0; });
+    add('音声の総数', vs.length);
+    add('ドイツ語の音声', de.length ? de.map(function (v) { return v.name + '(' + v.lang + ')'; }).join(', ') : 'なし');
+  }
+  voiceReport();
+  if ('speechSynthesis' in window) {
+    speechSynthesis.addEventListener('voiceschanged', function () {
+      L = L.filter(function (l) { return l.indexOf('音声の総数') !== 0 && l.indexOf('ドイツ語の音声') !== 0; });
+      voiceReport();
+    });
+  }
+
+  // ---- WAV を生成して <audio> で鳴らす（読み上げとは別経路） ----
+  function toneWav(freq, sec) {
+    var rate = 44100, n = Math.floor(rate * sec);
+    var buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    function w(o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
+    w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    w(36, 'data'); v.setUint32(40, n * 2, true);
+    for (var i = 0; i < n; i++) {
+      var fade = Math.min(1, Math.min(i, n - i) / (rate * 0.03));
+      v.setInt16(44 + i * 2, Math.sin(2 * Math.PI * freq * i / rate) * 0.45 * fade * 32767, true);
+    }
+    var bytes = new Uint8Array(buf), bin = '';
+    for (var j = 0; j < bytes.length; j++) bin += String.fromCharCode(bytes[j]);
+    return 'data:audio/wav;base64,' + btoa(bin);
+  }
+
+  function ask(el, q, onYes, onNo) {
+    el.className = 'verdict wait';
+    el.innerHTML = q + ' <button style="width:auto;padding:7px 18px;font-size:13px;margin:8px 6px 0 0">聞こえた</button>' +
+                   '<button style="width:auto;padding:7px 18px;font-size:13px;background:#514a43">聞こえない</button>';
+    var bs = el.getElementsByTagName('button');
+    bs[0].onclick = onYes; bs[1].onclick = onNo;
+  }
+
+  var beepHeard = null, speechHeard = null;
+  function conclude() {
+    if (beepHeard === null || speechHeard === null) return;
+    var v = document.getElementById('speakV');
+    var msg;
+    if (!beepHeard && !speechHeard) {
+      msg = '▶ 端末が消音されています。本体左側のマナーモードスイッチと音量を確認してください。';
+    } else if (beepHeard && !speechHeard) {
+      msg = '▶ 音自体は鳴るのに読み上げだけ鳴りません。読み上げ機能側の問題です。' +
+            (standalone ? 'ホーム画面からではなく Safari で開くと鳴る可能性があります。' : '');
+    } else {
+      msg = '▶ 読み上げは鳴っています。';
+    }
+    add('判定', msg);
+    v.className = 'verdict ' + (speechHeard ? 'ok' : 'ng');
+    v.textContent = msg;
+  }
+
+  document.getElementById('beep').onclick = function () {
+    var a = new Audio(toneWav(660, 0.6));
+    a.volume = 1;
+    var p = a.play();
+    if (p && p.catch) p.catch(function (e) { add('ビープ再生エラー', e.name + ' ' + e.message); });
+    add('ビープ', '再生を実行');
+    ask(document.getElementById('beepV'), '聞こえましたか？',
+      function () { beepHeard = true; add('ビープ結果', '聞こえた'); document.getElementById('beepV').className = 'verdict ok'; document.getElementById('beepV').textContent = '聞こえた'; conclude(); },
+      function () { beepHeard = false; add('ビープ結果', '聞こえない'); document.getElementById('beepV').className = 'verdict ng'; document.getElementById('beepV').textContent = '聞こえない'; conclude(); });
+  };
+
+  document.getElementById('speak').onclick = function () {
+    if (!('speechSynthesis' in window)) { add('読み上げ', '非対応'); return; }
+    var t0 = Date.now();
+    var u = new SpeechSynthesisUtterance('Herzlich willkommen');
+    u.lang = 'de-DE'; u.rate = 0.85; u.volume = 1;
+    u.onstart = function () { add('読み上げ onstart', (Date.now() - t0) + 'ms'); };
+    u.onend = function () { add('読み上げ onend', (Date.now() - t0) + 'ms'); };
+    u.onerror = function (e) { add('読み上げ onerror', e.error || '不明'); };
+    speechSynthesis.speak(u);
+    add('読み上げ', 'speak() 実行 / speaking=' + speechSynthesis.speaking + ' paused=' + speechSynthesis.paused);
+    setTimeout(function () {
+      add('1.5秒後の状態', 'speaking=' + speechSynthesis.speaking + ' pending=' + speechSynthesis.pending + ' paused=' + speechSynthesis.paused);
+    }, 1500);
+    ask(document.getElementById('speakV'), 'ドイツ語が聞こえましたか？',
+      function () { speechHeard = true; add('読み上げ結果', '聞こえた'); conclude(); },
+      function () { speechHeard = false; add('読み上げ結果', '聞こえない'); conclude(); });
+  };
+
+  document.getElementById('copy').onclick = function () {
+    var t = L.join('\n');
+    if (nav.clipboard) nav.clipboard.writeText(t).then(function () { alert('コピーしました'); },
+      function () { alert('コピーできませんでした。画面の文字を選択してコピーしてください。'); });
+    else alert('画面の文字を選択してコピーしてください。');
+  };
+})();
+</script>
+</body>
+</html>
